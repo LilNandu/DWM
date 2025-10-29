@@ -1,0 +1,98 @@
+# AGNES Clustering - Compact Version
+def load_csv(f):
+    with open(f) as file:
+        lines = [l.strip() for l in file if l.strip()]
+    return [float(x.strip()) for line in lines for x in line.split(',')]
+
+def dist(c1, c2, link):
+    if link == 'single':
+        return min(abs(a - b) for a in c1 for b in c2)
+    elif link == 'complete':
+        return max(abs(a - b) for a in c1 for b in c2)
+    else:
+        return sum(abs(a - b) for a in c1 for b in c2) / (len(c1) * len(c2))
+
+def agnes(data, link='single'):
+    clusters = [[x] for x in data]
+    print(f"Initial clusters: {clusters}\n")
+    step = 1
+    while len(clusters) > 1:
+        min_d, ci, cj = float('inf'), 0, 1
+        for i in range(len(clusters)):
+            for j in range(i+1, len(clusters)):
+                d = dist(clusters[i], clusters[j], link)
+                if d < min_d:
+                    min_d, ci, cj = d, i, j
+        print(f"Step {step}: Merge {clusters[ci]} and {clusters[cj]} (distance = {min_d:.2f})")
+        clusters[ci].extend(clusters[cj])
+        clusters.pop(cj)
+        print(f"Clusters: {clusters}\n")
+        step += 1
+    print(f"Final cluster: {clusters[0]}")
+    return clusters[0]
+
+# Main
+print("=== AGNES CLUSTERING ===\n")
+inp = input("Enter data points: ").strip()
+
+if inp.endswith('.csv'):
+    print(f"Loading {inp}...")
+    data = load_csv(inp)
+    print(f"Loaded {len(data)} points: {data}\n")
+else:
+    data = [float(x.strip()) for x in inp.split(',')]
+
+link = input("Linkage (single/complete/average) [default: single]: ").strip().lower()
+if link not in ['single', 'complete', 'average']:
+    link = 'single'
+
+print("\n" + "="*50 + "\n")
+agnes(data, link)
+
+"""
+EXECUTION:
+python3 agnes.py
+
+CSV EXAMPLE (data.csv):
+18,22,25,27,42,43
+
+OR (multi-line):
+18,22
+25,27
+42,43
+
+CSV MODE:
+Enter data points: data.csv
+Linkage: single
+
+MANUAL MODE:
+Enter data points: 18,22,25,27,42,43
+Linkage: single
+
+OUTPUT:
+=== AGNES CLUSTERING ===
+
+Initial clusters: [[18], [22], [25], [27], [42], [43]]
+
+Step 1: Merge [42] and [43] (distance = 1.00)
+Clusters: [[18], [22], [25], [27], [42, 43]]
+
+Step 2: Merge [25] and [27] (distance = 2.00)
+Clusters: [[18], [22], [25, 27], [42, 43]]
+
+Step 3: Merge [22] and [25, 27] (distance = 3.00)
+Clusters: [[18], [22, 25, 27], [42, 43]]
+
+Step 4: Merge [18] and [22, 25, 27] (distance = 4.00)
+Clusters: [[18, 22, 25, 27], [42, 43]]
+
+Step 5: Merge [18, 22, 25, 27] and [42, 43] (distance = 15.00)
+Clusters: [[18, 22, 25, 27, 42, 43]]
+
+Final cluster: [18, 22, 25, 27, 42, 43]
+
+LINKAGE TYPES:
+- single: minimum distance between any two points
+- complete: maximum distance between any two points
+- average: average distance between all point pairs
+"""

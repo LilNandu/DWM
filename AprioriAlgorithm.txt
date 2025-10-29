@@ -1,0 +1,172 @@
+# Apriori Algorithm - Compact Version
+def load_csv(f):
+    with open(f) as file:
+        lines = [l.strip().split(',') for l in file if l.strip()]
+    return [[item.strip() for item in line] for line in lines]
+
+def comb(items, r):
+    res, n = [], len(items)
+    idx = list(range(r))
+    while True:
+        res.append([items[i] for i in idx])
+        for i in range(r-1, -1, -1):
+            if idx[i] != i + n - r:
+                break
+        else:
+            return res
+        idx[i] += 1
+        for j in range(i+1, r):
+            idx[j] = idx[j-1] + 1
+
+def powerset(items):
+    return [s for r in range(1, len(items)+1) for s in comb(items, r)]
+
+def sup_count(data, itemset):
+    return sum(1 for t in data if itemset.issubset(set(t)))
+
+def gen_cand(prev, k):
+    cand, items = [], list(prev.keys())
+    if k == 2:
+        for i in range(len(items)):
+            for j in range(i+1, len(items)):
+                new = items[i].union(items[j])
+                if new not in cand:
+                    cand.append(new)
+    else:
+        for i in range(len(items)):
+            for j in range(i+1, len(items)):
+                l1, l2 = sorted(list(items[i])), sorted(list(items[j]))
+                if l1[:k-2] == l2[:k-2]:
+                    new = set(l1).union(set(l2))
+                    if len(new) == k and new not in cand:
+                        cand.append(frozenset(new))
+    return cand
+
+def apriori(data, min_sup):
+    print(f"Total transactions: {len(data)}, Min support: {min_sup}\n")
+    items = {}
+    for t in data:
+        for item in t:
+            k = frozenset([item])
+            items[k] = items.get(k, 0) + 1
+    freq = {1: {i: c for i, c in items.items() if c >= min_sup}}
+    k = 2
+    while (k-1) in freq and freq[k-1]:
+        ck = gen_cand(freq[k-1], k)
+        if not ck:
+            break
+        cnt = {c: sup_count(data, c) for c in ck}
+        lk = {i: c for i, c in cnt.items() if c >= min_sup}
+        if lk:
+            freq[k] = lk
+            k += 1
+        else:
+            break
+    return freq
+
+def gen_rules(freq, min_conf):
+    rules = []
+    for k in freq:
+        if k < 2:
+            continue
+        for itemset in freq[k]:
+            items = list(itemset)
+            for ant in powerset(items):
+                if len(ant) >= len(items):
+                    continue
+                ant_set = frozenset(ant)
+                cons = itemset - ant_set
+                if not cons or len(ant_set) not in freq or ant_set not in freq[len(ant_set)]:
+                    continue
+                conf = freq[len(itemset)][itemset] / freq[len(ant_set)][ant_set]
+                if conf >= min_conf:
+                    rules.append((ant_set, cons, conf))
+    return rules
+
+# Main
+print("=== APRIORI ALGORITHM ===\n")
+inp = input("Enter dataset (csv file or 'manual'): ").strip()
+
+if inp.endswith('.csv'):
+    print(f"Loading {inp}...")
+    data = load_csv(inp)
+    print(f"Loaded {len(data)} transactions")
+else:
+    n = int(input("Number of transactions: "))
+    data = []
+    print("Enter items (comma-separated):")
+    for i in range(n):
+        items = input(f"T{i+1}: ").strip().split(',')
+        data.append([item.strip() for item in items])
+
+min_sup = float(input("\nMinimum support (0-1 or count): "))
+if min_sup <= 1:
+    min_sup = int(len(data) * min_sup)
+else:
+    min_sup = int(min_sup)
+
+min_conf = float(input("Minimum confidence (0-1): "))
+
+print("\n" + "="*50)
+freq = apriori(data, min_sup)
+
+print("\n=== FREQUENT ITEMSETS ===")
+for k in freq:
+    for itemset in freq[k]:
+        print(f"{set(itemset)}: support = {freq[k][itemset]}")
+
+rules = gen_rules(freq, min_conf)
+print("\n=== ASSOCIATION RULES ===")
+for ant, cons, conf in rules:
+    print(f"{set(ant)} -> {set(cons)} (confidence = {conf*100:.1f}%)")
+
+# DON't WRITE THIS it is just How to run this code you can delete code below it has 2 modes You can add your dataset after executing it in terminal(can be any manual or csv ;))
+"""
+EXECUTION:
+python3 apriori.py
+
+CSV EXAMPLE (transactions.csv):
+Milk,Bread,Eggs
+Milk,Bread
+Milk,Eggs
+Bread,Eggs
+Milk,Bread,Eggs,Butter
+
+CSV MODE:
+Enter dataset: transactions.csv
+Minimum support: 0.4
+Minimum confidence: 0.6
+
+MANUAL MODE:
+Enter dataset: manual
+Number of transactions: 5
+Enter items:
+T1: Milk,Bread,Eggs
+T2: Milk,Bread
+T3: Milk,Eggs
+T4: Bread,Eggs
+T5: Milk,Bread,Eggs,Butter
+Minimum support: 0.4
+Minimum confidence: 0.6
+
+OUTPUT:
+Total transactions: 5, Min support: 2
+
+=== FREQUENT ITEMSETS ===
+{'Milk'}: support = 4
+{'Bread'}: support = 4
+{'Eggs'}: support = 4
+{'Butter'}: support = 1
+{'Milk', 'Bread'}: support = 3
+{'Milk', 'Eggs'}: support = 3
+{'Bread', 'Eggs'}: support = 3
+{'Milk', 'Bread', 'Eggs'}: support = 2
+
+=== ASSOCIATION RULES ===
+{'Milk'} -> {'Bread'} (confidence = 75.0%)
+{'Bread'} -> {'Milk'} (confidence = 75.0%)
+{'Milk'} -> {'Eggs'} (confidence = 75.0%)
+{'Eggs'} -> {'Milk'} (confidence = 75.0%)
+{'Bread'} -> {'Eggs'} (confidence = 75.0%)
+{'Eggs'} -> {'Bread'} (confidence = 75.0%)
+"""

@@ -1,0 +1,126 @@
+# Naive Bayes Classifier - Compact Version
+def load_csv(f, cls):
+    with open(f) as file:
+        lines = [l.strip().split(',') for l in file if l.strip()]
+    h = [c.strip() for c in lines[0]]
+    feats = [c for c in h if c.lower() != cls.lower()]
+    data = []
+    for row in lines[1:]:
+        d = {h[i].strip(): row[i].strip().lower() for i in range(len(h))}
+        data.append(d)
+    return data, feats, cls
+
+def classify(data, feats, cls, test, smooth):
+    cc = {}
+    for d in data:
+        cc[d[cls]] = cc.get(d[cls], 0) + 1
+    tot = len(data)
+    print("\n=== PRIORS ===")
+    for c in cc:
+        print(f"P({c}) = {cc[c]}/{tot} = {cc[c]/tot:.4f}")
+    
+    fvc = {f: {} for f in feats}
+    for d in data:
+        for f in feats:
+            v = d[f]
+            if v not in fvc[f]:
+                fvc[f][v] = {}
+            fvc[f][v][d[cls]] = fvc[f][v].get(d[cls], 0) + 1
+    
+    fcount = {f: len(set(d[f] for d in data)) for f in feats}
+    print("\n=== CONDITIONALS ===")
+    post = {}
+    for c in cc:
+        print(f"\nClass = {c}:")
+        p = cc[c] / tot
+        for f in feats:
+            cnt = fvc[f].get(test[f], {}).get(c, 0)
+            cond = (cnt + 1.0) / (cc[c] + fcount[f]) if smooth else (cnt / cc[c] if cc[c] else 0)
+            print(f"  P({f}={test[f]}|{c}) = {cond:.4f}")
+            p *= cond
+        post[c] = p
+    
+    print("\n=== POSTERIORS ===")
+    for c in post:
+        print(f"P({c}|evidence) ∝ {post[c]:.6f}")
+    print(f"\n=== PREDICTION ===\nPredicted: {max(post, key=post.get)}")
+
+# Main
+print("=== NAIVE BAYES ===\n")
+inp = input("Enter number of features: ").strip()
+
+if inp.endswith('.csv'):
+    cls = input("Enter class attribute: ").strip()
+    print(f"\nLoading {inp}...")
+    raw, feats, cls = load_csv(inp, cls)
+    data = raw
+    print(f"Loaded {len(data)} examples")
+else:
+    nf = int(inp)
+    feats = [input(f"Feature {i+1}: ").strip() for i in range(nf)]
+    cls = input("Class attribute: ").strip()
+    ne = int(input("\nTraining examples: "))
+    data = []
+    print("\nEnter data:")
+    for i in range(ne):
+        print(f"Example {i+1}:")
+        d = {f: input(f"  {f}: ").strip().lower() for f in feats}
+        d[cls] = input(f"  {cls}: ").strip().lower()
+        data.append(d)
+
+print("\n=== TEST ===")
+test = {f: input(f"{f}: ").strip().lower() for f in feats}
+smooth = input("\nLaplace smoothing? (y/n): ").lower().startswith('y')
+print("\n" + "="*50)
+classify(data, feats, cls, test, smooth)
+
+# DON't WRITE THIS it is just How to run this code you can delete code below it has 2 modes You can add your dataset after executing it in terminal(can be any manual or csv ;))
+"""
+EXECUTION:
+python3 naive_bayes.py
+
+MANUAL MODE:
+Enter number of features: 1
+Feature 1: outlook
+Class attribute: play
+Training examples: 12
+[enter each example]
+
+OUTPUT:
+=== PRIORS ===
+P(yes) = 7/12 = 0.5833
+P(no) = 5/12 = 0.4167
+
+=== CONDITIONALS ===
+Class = yes:
+  P(outlook=rainy|yes) = 0.2857
+Class = no:
+  P(outlook=rainy|no) = 0.2000
+
+=== POSTERIORS ===
+P(yes|evidence) ∝ 0.166667
+P(no|evidence) ∝ 0.083333
+
+=== PREDICTION ===
+Predicted: yes
+
+CSV EXAMPLE (weather.csv):
+outlook,play
+sunny,no
+sunny,no
+overcast,yes
+rainy,yes
+rainy,yes
+overcast,yes
+sunny,no
+sunny,yes
+overcast,yes
+overcast,yes
+overcast,yes
+rainy,no
+
+CSV MODE:
+Enter number of features: weather.csv
+Enter class attribute: play
+[loads automatically]
+"""
