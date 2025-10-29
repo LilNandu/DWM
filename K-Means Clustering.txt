@@ -1,0 +1,121 @@
+import random
+import time
+
+MAX_POINTS = 1000
+MAX_ITER = 100
+
+# Calculate absolute distance
+def distance(a, b):
+    if a >= b:
+        return a - b
+    else:
+        return b - a
+
+# Initialize centroids randomly from data
+def initialize_centroids(data, num_points, K):
+    centroids = []
+    for i in range(K):
+        index = random.randint(0, num_points - 1)
+        centroids.append(data[index])
+    return centroids
+
+# Assign each point to the nearest centroid
+def assign_clusters(data, centroids, num_points, K):
+    labels = [0] * num_points
+    for i in range(num_points):
+        min_dist = 1e18
+        cluster = 0
+        for j in range(K):
+            dist = distance(data[i], centroids[j])
+            if dist < min_dist:
+                min_dist = dist
+                cluster = j
+        labels[i] = cluster
+    return labels
+
+# Update centroids based on assigned points
+def update_centroids(data, labels, num_points, K):
+    sum_vals = [0.0] * K
+    count = [0] * K
+    centroids = [0.0] * K
+
+    for i in range(num_points):
+        cluster = labels[i]
+        sum_vals[cluster] += data[i]
+        count[cluster] += 1
+
+    for i in range(K):
+        if count[i] > 0:
+            centroids[i] = sum_vals[i] / count[i]
+    return centroids
+
+# Check if cluster assignments changed
+def labels_changed(old_labels, new_labels, num_points):
+    for i in range(num_points):
+        if old_labels[i] != new_labels[i]:
+            return True
+    return False
+
+# Check if all points are in the same cluster
+def is_single_cluster(labels, num_points):
+    first = labels[0]
+    for i in range(1, num_points):
+        if labels[i] != first:
+            return False
+    return True
+
+# Print value as int if it has no decimal part, else as float
+def print_value(value):
+    if abs(value - int(value)) < 1e-9:
+        print(int(value), end="")
+    else:
+        print(f"{value:.2f}", end="")
+
+def main():
+    random.seed(time.time())
+
+    num_points = int(input(f"Enter number of data points (max {MAX_POINTS}): "))
+    data = []
+    labels = [-1] * num_points
+    old_labels = [-2] * num_points
+
+    print(f"Enter {num_points} data values:")
+    for i in range(num_points):
+        val = float(input())
+        data.append(val)
+
+    K = int(input("Enter number of clusters (K): "))
+
+    centroids = initialize_centroids(data, num_points, K)
+    iterations = 0
+
+    # Clustering loop
+    while iterations < MAX_ITER:
+        old_labels = labels[:]
+        labels = assign_clusters(data, centroids, num_points, K)
+        centroids = update_centroids(data, labels, num_points, K)
+        iterations += 1
+
+        if not labels_changed(old_labels, labels, num_points):
+            if not is_single_cluster(labels, num_points):
+                print(f"\nConverged after {iterations} iterations.")
+                break
+            else:
+                centroids = initialize_centroids(data, num_points, K)
+                iterations = 0
+
+    # Output section
+    print("\nClusters:")
+    for c in range(K):
+        print(f"Cluster {c}: {{", end="")
+        first = True
+        for i in range(num_points):
+            if labels[i] == c:
+                if not first:
+                    print(", ", end="")
+                print_value(data[i])
+                first = False
+        print("}")
+
+if __name__ == "__main__":
+    main()
