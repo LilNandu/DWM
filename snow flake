@@ -1,0 +1,98 @@
+-- ============================================================
+-- 1️⃣ Create Dimension Tables (simplified for sample data)
+-- ============================================================
+
+CREATE TABLE dim_time (
+    time_id INT PRIMARY KEY,
+    date DATE,
+    month VARCHAR(20),
+    quarter VARCHAR(10),
+    year INT
+);
+
+CREATE TABLE dim_location (
+    location_id INT PRIMARY KEY,
+    location_name VARCHAR(100),
+    region VARCHAR(50),
+    country VARCHAR(50)
+);
+
+CREATE TABLE dim_equipment (
+    equipment_id INT PRIMARY KEY,
+    equipment_name VARCHAR(100),
+    type VARCHAR(50),
+    manufacturer VARCHAR(100)
+);
+
+CREATE TABLE dim_environment (
+    env_id INT PRIMARY KEY,
+    temperature_c DECIMAL(5,2),
+    humidity_percent DECIMAL(5,2),
+    airflow_cfm DECIMAL(8,2)
+);
+
+-- ============================================================
+-- 2️⃣ Insert Sample Data into Dimensions
+-- ============================================================
+
+INSERT INTO dim_time (time_id, date, month, quarter, year) VALUES
+(1, '2025-10-01', 'October', 'Q4', 2025),
+(2, '2025-10-02', 'October', 'Q4', 2025),
+(3, '2025-10-03', 'October', 'Q4', 2025);
+
+INSERT INTO dim_location (location_id, location_name, region, country) VALUES
+(1, 'Data Center A', 'North', 'USA'),
+(2, 'Data Center B', 'South', 'India'),
+(3, 'Data Center C', 'West', 'Germany');
+
+INSERT INTO dim_equipment (equipment_id, equipment_name, type, manufacturer) VALUES
+(1, 'Server Rack 1', 'Compute', 'Dell'),
+(2, 'Cooling Unit 1', 'HVAC', 'Siemens'),
+(3, 'Power Distribution Unit 1', 'Electrical', 'Schneider');
+
+INSERT INTO dim_environment (env_id, temperature_c, humidity_percent, airflow_cfm) VALUES
+(1, 22.5, 45.0, 1200.00),
+(2, 24.0, 50.0, 1100.00),
+(3, 21.0, 40.0, 1300.00);
+
+-- ============================================================
+-- 3️⃣ Create FACT Table
+-- ============================================================
+
+CREATE TABLE fact_data_center (
+    fact_id INT PRIMARY KEY,
+    time_id INT NOT NULL,
+    location_id INT NOT NULL,
+    equipment_id INT NOT NULL,
+    env_id INT NOT NULL,
+
+    total_power_kw DECIMAL(10,2),
+    pue DECIMAL(5,2),
+    cool_req_power DECIMAL(10,2),
+    uptime_percent DECIMAL(5,2),
+    cpu_utilization DECIMAL(5,2),
+    response_time_ms INT,
+    incident_count INT,
+    downtime_minutes INT,
+
+    CONSTRAINT fk_time FOREIGN KEY (time_id) REFERENCES dim_time(time_id),
+    CONSTRAINT fk_location FOREIGN KEY (location_id) REFERENCES dim_location(location_id),
+    CONSTRAINT fk_equipment FOREIGN KEY (equipment_id) REFERENCES dim_equipment(equipment_id),
+    CONSTRAINT fk_env FOREIGN KEY (env_id) REFERENCES dim_environment(env_id)
+);
+
+-- ============================================================
+-- 4️⃣ Insert Sample Data into FACT Table
+-- ============================================================
+
+INSERT INTO fact_data_center (
+    fact_id, time_id, location_id, equipment_id, env_id,
+    total_power_kw, pue, cool_req_power, uptime_percent,
+    cpu_utilization, response_time_ms, incident_count, downtime_minutes
+)
+VALUES
+(1, 1, 1, 1, 1, 120.50, 1.45, 45.20, 99.98, 75.30, 200, 1, 5),
+(2, 2, 2, 2, 2, 135.75, 1.60, 55.10, 99.90, 80.10, 220, 0, 0),
+(3, 3, 3, 3, 3, 110.20, 1.35, 40.00, 99.95, 70.50, 250, 2, 10),
+(4, 1, 2, 1, 2, 140.00, 1.55, 50.00, 99.85, 82.00, 210, 1, 8),
+(5, 2, 3, 2, 1, 125.00, 1.40, 47.00, 99.92, 78.50, 230, 0, 0);
