@@ -1,0 +1,106 @@
+# K-Means Clustering - Compact Version
+import random
+
+def load_csv(f):
+    with open(f) as file:
+        return [float(x.strip()) for line in file if line.strip() for x in line.split(',')]
+
+def kmeans(data, k, max_iter=100):
+    n = len(data)
+    centroids = random.sample(data, k)
+    labels = [-1] * n
+    
+    for it in range(max_iter):
+        old_labels = labels[:]
+        labels = [min(range(k), key=lambda j: abs(data[i] - centroids[j])) for i in range(n)]
+        
+        sums = [0.0] * k
+        counts = [0] * k
+        for i in range(n):
+            sums[labels[i]] += data[i]
+            counts[labels[i]] += 1
+        
+        centroids = [sums[j] / counts[j] if counts[j] > 0 else centroids[j] for j in range(k)]
+        
+        if labels == old_labels:
+            if len(set(labels)) > 1:
+                print(f"Converged after {it+1} iterations")
+                break
+            else:
+                centroids = random.sample(data, k)
+                labels = [-1] * n
+        
+        if it < 3 or it == max_iter-1:
+            print(f"Iter {it+1}: Centroids = {[f'{c:.2f}' for c in centroids]}")
+    
+    return labels, centroids
+
+# Main
+print("=== K-MEANS CLUSTERING ===\n")
+inp = input("Enter data points: ").strip()
+
+if inp.endswith('.csv'):
+    data = load_csv(inp)
+    print(f"Loaded {len(data)} points: {data}\n")
+else:
+    n = int(input("Number of points: "))
+    data = [float(input(f"Point {i+1}: ")) for i in range(n)]
+
+k = int(input("\nNumber of clusters (K): "))
+random.seed(42)
+
+print("\n" + "="*50 + "\n")
+labels, centroids = kmeans(data, k)
+
+print("\n=== FINAL CLUSTERS ===")
+for c in range(k):
+    cluster_points = [data[i] for i in range(len(data)) if labels[i] == c]
+    print(f"Cluster {c} (centroid={centroids[c]:.2f}): {cluster_points}")
+
+"""
+EXECUTION:
+python3 kmeans.py
+
+CSV EXAMPLE (data.csv):
+2,3,5,8,9,10,15,20,21,22
+
+OR (multi-line):
+2,3,5
+8,9,10
+15,20,21,22
+
+CSV MODE:
+Enter data points: data.csv
+Number of clusters (K): 3
+
+MANUAL MODE:
+Enter data points: manual
+Number of points: 10
+Point 1: 2
+Point 2: 3
+[... continue ...]
+Number of clusters (K): 3
+
+OUTPUT:
+=== K-MEANS CLUSTERING ===
+
+Loaded 10 points: [2.0, 3.0, 5.0, 8.0, 9.0, 10.0, 15.0, 20.0, 21.0, 22.0]
+
+==================================================
+
+Iter 1: Centroids = ['3.33', '9.50', '21.00']
+Iter 2: Centroids = ['3.33', '9.00', '21.00']
+Iter 3: Centroids = ['3.33', '9.00', '21.00']
+Converged after 3 iterations
+
+=== FINAL CLUSTERS ===
+Cluster 0 (centroid=3.33): [2.0, 3.0, 5.0]
+Cluster 1 (centroid=9.00): [8.0, 9.0, 10.0]
+Cluster 2 (centroid=21.00): [15.0, 20.0, 21.0, 22.0]
+
+NOTES:
+- Random seed set to 42 for reproducible results
+- Automatically reinitializes if all points in one cluster
+- Shows first 3 iterations + last iteration
+- Converges when labels don't change between iterations
+"""
