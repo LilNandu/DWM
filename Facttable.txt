@@ -1,0 +1,45 @@
+CREATE TABLE fact_data_center (
+    fact_id INT PRIMARY KEY AUTO_INCREMENT,
+    
+    -- Foreign Key columns (should be NOT NULL if no missing data is allowed)
+    time_id INT NOT NULL,
+    location_id INT NOT NULL,
+    equipment_id INT NOT NULL,
+    env_id INT NOT NULL,
+
+    -- Measure Columns
+    total_power_kw DECIMAL(10,2),
+    pue DECIMAL(5,2),
+    cool_req_power DECIMAL(10,2),
+    uptime_percent DECIMAL(5,2),
+    cpu_utilization DECIMAL(5,2),
+    response_time_ms INT,
+    incident_count INT,
+    downtime_minutes INT,
+
+    -- Explicitly Naming and Defining Foreign Keys
+    CONSTRAINT fk_time FOREIGN KEY (time_id) 
+        REFERENCES dim_time(time_id),
+    
+    CONSTRAINT fk_location FOREIGN KEY (location_id) 
+        REFERENCES dim_location(location_id),
+    
+    CONSTRAINT fk_equipment FOREIGN KEY (equipment_id) 
+        REFERENCES dim_equipment(equipment_id),
+    
+    CONSTRAINT fk_env FOREIGN KEY (env_id) 
+        REFERENCES dim_environment(env_id)
+);
+
+-- Inserting sample data into fact_data_center table
+INSERT INTO fact_data_center (
+    time_id, location_id, equipment_id, env_id, 
+    total_power_kw, pue, cool_req_power, uptime_percent, 
+    cpu_utilization, response_time_ms, incident_count, downtime_minutes
+)
+VALUES
+(1, 1, 1, 1, 5000.50, 1.45, 1500.00, 99.99, 85.5, 150, 5, 30),  -- Sample data 1
+(2, 2, 2, 2, 4800.75, 1.50, 1450.25, 99.75, 88.3, 120, 7, 25),   -- Sample data 2
+(3, 3, 3, 3, 5300.00, 1.40, 1600.00, 99.90, 80.0, 100, 3, 15),   -- Sample data 3
+(4, 1, 2, 1, 5200.25, 1.48, 1550.75, 99.80, 82.0, 130, 4, 40),   -- Sample data 4
+(5, 2, 1, 3, 4900.60, 1.52, 1505.50, 99.85, 84.0, 110, 6, 35);   -- Sample data 5
