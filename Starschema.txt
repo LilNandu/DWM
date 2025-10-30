@@ -1,0 +1,35 @@
+-- Dim Time
+CREATE TABLE dim_time (
+    time_id INT PRIMARY KEY,
+    date DATE NOT NULL,
+    month VARCHAR(15),
+    year INT,
+    hour INT
+);
+
+-- Dim Location
+CREATE TABLE dim_location (
+    location_id INT PRIMARY KEY,
+    data_center VARCHAR(50) NOT NULL,
+    building VARCHAR(50),
+    floor INT,
+    room VARCHAR(20),
+    rack VARCHAR(20)
+);
+
+-- Dim Equipment
+CREATE TABLE dim_equipment (
+    equipment_id INT PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    model VARCHAR(50),
+    manufacturer VARCHAR(50),
+    age INT
+);
+
+-- Dim Environment
+CREATE TABLE dim_environment (
+    env_id INT PRIMARY KEY,
+    temperature DECIMAL(5,2),
+    humidity DECIMAL(5,2),
+    power_quality VARCHAR(20)
+);
