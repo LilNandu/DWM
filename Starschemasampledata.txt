@@ -1,0 +1,27 @@
+INSERT INTO dim_time (time_id, date, month, year, hour) VALUES
+(1, '2025-10-30', 'October', 2025, 8),
+(2, '2025-10-30', 'October', 2025, 12),
+(3, '2025-10-30', 'October', 2025, 16),
+(4, '2025-10-29', 'October', 2025, 8),
+(5, '2025-10-29', 'October', 2025, 12);
+
+INSERT INTO dim_location (location_id, data_center, building, floor, room, rack) VALUES
+(1, 'DC-East', 'Building A', 1, 'ServerRoom1', 'Rack-01'),
+(2, 'DC-East', 'Building A', 1, 'ServerRoom1', 'Rack-02'),
+(3, 'DC-West', 'Building B', 2, 'ServerRoom3', 'Rack-07'),
+(4, 'DC-North', 'Building C', 3, 'ServerRoom5', 'Rack-12'),
+(5, 'DC-South', 'Building D', 1, 'ServerRoom2', 'Rack-03');
+
+INSERT INTO dim_equipment (equipment_id, type, model, manufacturer, age) VALUES
+(1, 'Server', 'PowerEdge R740', 'Dell', 2),
+(2, 'Switch', 'Catalyst 9500', 'Cisco', 3),
+(3, 'UPS', 'Smart-UPS 5000VA', 'APC', 4),
+(4, 'Router', 'ISR 4451', 'Cisco', 5),
+(5, 'Storage', 'FlashArray X20', 'Pure Storage', 1);
+
+INSERT INTO dim_environment (env_id, temperature, humidity, power_quality) VALUES
+(1, 21.50, 45.00, 'Good'),
+(2, 23.00, 50.00, 'Good'),
+(3, 25.75, 55.00, 'Moderate'),
+(4, 27.30, 60.00, 'Poor'),
+(5, 22.00, 47.00, 'Good');
